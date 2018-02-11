@@ -1,0 +1,7 @@
+*.py[co]
+*.py.bak
+*.swp
+.eggs/
+test_pymssql_at_appveyor.egg-info/
+build
+dist
