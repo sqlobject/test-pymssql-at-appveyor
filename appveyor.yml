@@ -20,8 +20,25 @@ environment:
     - PYTHON_VERSION: "3.4"
       PYTHON_ARCH: "32"
       PYTHON_HOME: "C:\\Python34"
+      db: mssql2014
 
 install:
+  # Enable TCP for mssql
+  # (from appveyor documentation)
+  - ps: |
+      [reflection.assembly]::LoadWithPartialName("Microsoft.SqlServer.Smo") | Out-Null
+      [reflection.assembly]::LoadWithPartialName("Microsoft.SqlServer.SqlWmiManagement") | Out-Null
+      $serverName = $env:COMPUTERNAME
+      $instanceName = 'SQL2014'
+      $smo = 'Microsoft.SqlServer.Management.Smo.'
+      $wmi = new-object ($smo + 'Wmi.ManagedComputer')
+      $uri = "ManagedComputer[@Name='$serverName']/ServerInstance[@Name='$instanceName']/ServerProtocol[@Name='Tcp']"
+      $Tcp = $wmi.GetSmoObject($uri)
+      $Tcp.IsEnabled = $true
+      $TCP.alter()
+      Set-Service SQLBrowser -StartupType Manual
+      Start-Service SQLBrowser
+      Start-Service "MSSQL`$$instanceName"
   # Ensure we use the right python version
   - "SET PATH=%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;%PATH%"
   - "python --version"
@@ -33,7 +50,9 @@ install:
 build: false
 
 test_script:
+  - sqlcmd -U sa -P "Password12!" -S .\SQL2014 -Q "CREATE DATABASE sqlobject_test"
   - "python test-pymssql-at-appveyor.py"
+  - sqlcmd -U sa -P "Password12!" -S .\SQL2014 -Q "DROP DATABASE sqlobject_test"
 
 after_test:
   - remove-old-files.py -o 180 %LOCALAPPDATA%\\pip\\Cache
