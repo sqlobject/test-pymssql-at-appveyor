@@ -1,36 +1,24 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
 
-dbuser = 'sa'
-dbpasswd = 'Password12!'
-dbhost = 'localhost\\SQL2014'
-dbname = 'sqlobject_test'
+from sqlobject import SQLObject, StringCol
 
-import pymssql
-conn = pymssql.connect(dbhost, dbuser, dbpasswd, dbname)
+__connection__ = "mssql://sa:Password12!@localhost\SQL2014/sqlobject_test?driver=pymssql&timeout=30&debug=1"
 
-conn.autocommit(True)
-cursor = conn.cursor()
+class Test(SQLObject):
+    test = StringCol()
 
-cursor.execute("""
-    CREATE TABLE test (
-        id INT NOT NULL,
-        test VARCHAR(255) NOT NULL,
-        PRIMARY KEY(id)
-    )
-""")
+Test.createTable()
 
-conn.autocommit(False)
-#cursor.execute("BEGIN TRANSACTION")
+conn = Test._connection
+txn = conn.transaction()
+txn.commit()
 
-cursor.execute("INSERT INTO test (id, test) VALUES (1, 'test1')")
-conn.rollback()
-cursor.execute("SELECT * FROM test")
-print(cursor.fetchall())
+Test(test='test1', connection=txn)
+txn.rollback()
+print(list(Test.select()))
 
-cursor.execute("INSERT INTO test (id, test) VALUES (1, 'test1')")
-conn.commit()
-cursor.execute("SELECT * FROM test")
-print(cursor.fetchall())
+Test(test='test1', connection=txn)
+txn.commit()
+print(list(Test.select()))
 
-cursor.close()
 conn.close()
