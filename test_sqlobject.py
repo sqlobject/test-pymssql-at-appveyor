@@ -19,11 +19,10 @@ class SOTestSOTrans(SQLObject):
     name = StringCol(length=10, alternateID=True, dbName='name_col')
 
 
-def test_transaction_commit_sync():
+def test_sqlo():
     setupClass(SOTestSOTrans)
     connection = SOTestSOTrans._connection
     trans = connection.transaction()
     SOTestSOTrans(name='bob')
 
-
-test_transaction_commit_sync()
+test_sqlo()

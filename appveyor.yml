@@ -44,14 +44,16 @@ install:
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   - "pip --version"
-  - "pip install --upgrade pip setuptools pytest pymssql SQLObject ppu"
+  - "pip install --upgrade pip setuptools pymssql ppu"
+#  - "pip install --upgrade pip setuptools pytest pymssql SQLObject ppu"
 
 # No build step
 build: false
 
 test_script:
   - sqlcmd -U sa -P "Password12!" -S .\SQL2014 -Q "CREATE DATABASE sqlobject_test"
-  - python test_pymssql_at_appveyor.py
+  - python test_pymssql.py
+#  - python test_sqlobject.py
   - sqlcmd -U sa -P "Password12!" -S .\SQL2014 -Q "DROP DATABASE sqlobject_test"
 
 after_test:
